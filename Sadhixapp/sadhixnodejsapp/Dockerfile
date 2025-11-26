@@ -1,20 +1,16 @@
-# Use a lightweight Node.js base image
-FROM node:alpine
+# Build stage
+FROM node:18-alpine AS build
 
-# Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
 COPY package*.json ./
-
-# Install dependencies
 RUN npm install
-
-# Copy the rest of your application files
 COPY . .
+RUN npm run build
 
-# Expose the port your app listens on
-EXPOSE 3000
+# Serve using nginx
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# Start the application
-CMD ["node", "index.js"]
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
